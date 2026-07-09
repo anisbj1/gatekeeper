@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "author": "Antigravity Workspace Auto-generated",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp32", "top": 50, "left": 0, "attrs": {} },
+    { "type": "board-mfrc522", "id": "rfid", "top": -150, "left": -200, "attrs": {} },
+    { "type": "wokwi-ili9341", "id": "lcd", "top": -150, "left": 200, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp32:GND.1", "rfid:GND", "black", [ "h0" ] ],
+    [ "esp32:3V3", "rfid:3.3V", "red", [ "h0" ] ],
+    [ "esp32:18", "rfid:SCK", "yellow", [ "h0" ] ],
+    [ "esp32:23", "rfid:MOSI", "orange", [ "h0" ] ],
+    [ "esp32:19", "rfid:MISO", "blue", [ "h0" ] ],
+    [ "esp32:5", "rfid:SDA", "green", [ "h0" ] ],
+    [ "esp32:22", "rfid:RST", "gray", [ "h0" ] ],
+
+    [ "esp32:GND.2", "lcd:GND", "black", [ "h0" ] ],
+    [ "esp32:3V3", "lcd:VCC", "red", [ "h0" ] ],
+    [ "esp32:18", "lcd:SCK", "yellow", [ "h0" ] ],
+    [ "esp32:23", "lcd:MOSI", "orange", [ "h0" ] ],
+    [ "esp32:15", "lcd:CS", "green", [ "h0" ] ],
+    [ "esp32:2", "lcd:D/C", "purple", [ "h0" ] ],
+    [ "esp32:4", "lcd:RESET", "gray", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}

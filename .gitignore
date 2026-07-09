@@ -1,0 +1,26 @@
+# PlatformIO
+.pio
+.clang_complete
+.gcc-flags.json
+bin
+libdeps
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+db.sqlite3
+
+# Logs
+*.log
+.system_generated/
+
+# Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

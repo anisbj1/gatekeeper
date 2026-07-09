@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info:
+  title: Smart IoT Access Control API
+  description: OpenAPI specifications for ESP32 & ESP32-CAM REST requests to Django REST Framework.
+  version: 1.0.0
+paths:
+  /api/v1/access/verify/:
+    post:
+      summary: Verify scanned RFID UID card.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_uid:
+                  type: string
+                  example: "A1B2C3D4"
+                device_id:
+                  type: string
+                  example: "esp32_controller_01"
+              required:
+                - card_uid
+                - device_id
+      responses:
+        '200':
+          description: Verified response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [authorized, rejected]
+                  username:
+                    type: string
+                    example: "John Doe"
+                  action:
+                    type: string
+                    enum: [unlock, keep_locked]
+                  trigger_camera:
+                    type: boolean
+                    example: true
+        '403':
+          description: Access Denied or Invalid Card
+  /api/v1/camera/upload/:
+    post:
+      summary: Upload captured face snapshot from ESP32-CAM.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                device_id:
+                  type: string
+                  example: "esp32_cam_01"
+              required:
+                - image
+                - device_id
+      responses:
+        '201':
+          description: Image stored successfully
