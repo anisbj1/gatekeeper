@@ -16,128 +16,102 @@ from apps.access_control.models import Device, Card, Schedule, AccessRule
 
 def seed():
     print("============================================")
-    print("Seeding SQLite local database for V2...")
+    print("Seeding SQLite local database for Demo...")
     print("============================================")
     
-    # 1. Create standard active user
-    user, created = User.objects.get_or_create(username='anis')
-    if created:
-        user.set_password('password')
-        user.first_name = 'Anis'
-        user.last_name = 'Stage'
-        user.save()
-        print("Created User: 'anis'")
-    else:
-        print("User 'anis' already exists.")
-        
+    # 1. Clean previous data
+    print("Cleaning database tables...")
+    AccessRule.objects.all().delete()
+    Schedule.objects.all().delete()
+    Card.objects.all().delete()
+    User.objects.filter(username__in=['anis', 'anis1', 'anis2', 'anis3', 'anis4', 'visitor', 'expired_guest']).delete()
+    
     # 2. Create device 'esp32_01'
     device, created = Device.objects.get_or_create(
         device_id='esp32_01',
         defaults={'name': 'Main Lab Entrance', 'is_active': True}
     )
-    if created:
-        print(f"Registered Device: '{device.device_id}'")
-    else:
-        print(f"Device '{device.device_id}' already registered.")
+    print(f"Registered Device: '{device.device_id}'")
         
-    # 3. Create active card with UID 'E9B3A2C8' (Standard mock scan UID)
-    card1, created = Card.objects.get_or_create(
-        uid='E9B3A2C8',
-        defaults={'user': user, 'is_active': True}
+    # 3. Create reusable schedules
+    # Schedule A: Workdays 24h (Mon-Fri, whole day)
+    sched_workdays_24h = Schedule.objects.create(
+        name="Workdays 24h",
+        monday=True, tuesday=True, wednesday=True, thursday=True, friday=True,
+        saturday=False, sunday=False,
+        start_time=datetime.time(0, 0, 0),
+        end_time=datetime.time(23, 59, 59)
     )
-    if created:
-        print(f"Registered Card: '{card1.uid}' assigned to '{user.username}'")
-    else:
-        print(f"Card '{card1.uid}' already active.")
-        
-    # 4. Create inactive card with UID 'B8C7D6F5' (For access rejection verification)
-    card2, created = Card.objects.get_or_create(
-        uid='B8C7D6F5',
-        defaults={'user': user, 'is_active': False}
-    )
-    if created:
-        print(f"Registered Blocked Card: '{card2.uid}' assigned to '{user.username}'")
-    else:
-        print(f"Blocked Card '{card2.uid}' already exists.")
+    print("Created schedule: 'Workdays 24h'")
 
-    # 5. Create Workday schedules (Monday to Friday, 9:00 AM - 5:00 PM)
-    print("Seeding schedules and access rules for 'anis'...")
-    workdays_schedules = []
-    for day_num, day_name in [(1, 'Monday'), (2, 'Tuesday'), (3, 'Wednesday'), (4, 'Thursday'), (5, 'Friday')]:
-        sched, created_sched = Schedule.objects.get_or_create(
-            name=f"Workday 9-5 ({day_name})",
-            day_of_week=day_num,
-            start_time=datetime.time(9, 0),
-            end_time=datetime.time(17, 0)
-        )
-        workdays_schedules.append(sched)
-        
-        # Link card1 to device for each workday schedule
-        rule, created_rule = AccessRule.objects.get_or_create(
-            card=card1,
-            device=device,
-            schedule=sched,
-            defaults={'is_active': True}
-        )
-        if created_rule:
-            print(f"  Created active rule for '{card1.uid}' on {day_name}")
-
-    # 6. Create a guest visitor user with valid July 2026 date range and 24/7 access
-    visitor_user, created_vis = User.objects.get_or_create(username='visitor')
-    if created_vis:
-        visitor_user.set_password('password')
-        visitor_user.first_name = 'Visitor'
-        visitor_user.last_name = 'Guest'
-        visitor_user.save()
-        print("Created User: 'visitor'")
-        
-    visitor_card, created_vis_card = Card.objects.get_or_create(
-        uid='C1D2E3F4',
-        defaults={'user': visitor_user, 'is_active': True}
+    # Schedule B: Workdays 9-5 (Mon-Fri, 9:00 AM - 5:00 PM)
+    sched_workdays_9_5 = Schedule.objects.create(
+        name="Workdays 9-5",
+        monday=True, tuesday=True, wednesday=True, thursday=True, friday=True,
+        saturday=False, sunday=False,
+        start_time=datetime.time(9, 0, 0),
+        end_time=datetime.time(17, 0, 0)
     )
-    if created_vis_card:
-        print(f"Registered Visitor Card: '{visitor_card.uid}' assigned to '{visitor_user.username}'")
-        
-    vis_rule, created_vis_rule = AccessRule.objects.get_or_create(
-        card=visitor_card,
+    print("Created schedule: 'Workdays 9-5'")
+
+    # 4. User 1: anis1 (ACCESS GRANTED)
+    user1 = User.objects.create_user(username='anis1', password='password')
+    user1.first_name = "Anis"
+    user1.last_name = "One"
+    user1.save()
+    card1 = Card.objects.create(uid='E9B3A2C8', user=user1, is_active=True)
+    AccessRule.objects.create(
+        card=card1,
         device=device,
-        schedule=None,
+        schedule=sched_workdays_24h,
         start_date=datetime.date(2026, 7, 1),
         end_date=datetime.date(2026, 7, 31),
-        defaults={'is_active': True}
+        is_active=True
     )
-    if created_vis_rule:
-        print(f"  Created visitor rule for '{visitor_card.uid}' (Valid: July 1 to July 31, 2026)")
+    print(f"Created anis1 (UID: {card1.uid}) -> Authorized (Workdays 24h in July 2026)")
 
-    # 7. Create an expired guest visitor
-    expired_user, created_exp = User.objects.get_or_create(username='expired_guest')
-    if created_exp:
-        expired_user.set_password('password')
-        expired_user.first_name = 'Expired'
-        expired_user.last_name = 'Guest'
-        expired_user.save()
-        print("Created User: 'expired_guest'")
-        
-    expired_card, created_exp_card = Card.objects.get_or_create(
-        uid='F5E4D3C2',
-        defaults={'user': expired_user, 'is_active': True}
-    )
-    if created_exp_card:
-        print(f"Registered Expired Visitor Card: '{expired_card.uid}' assigned to '{expired_user.username}'")
-        
-    exp_rule, created_exp_rule = AccessRule.objects.get_or_create(
-        card=expired_card,
+    # 5. User 2: anis2 (REJECTED: No Access Rule)
+    user2 = User.objects.create_user(username='anis2', password='password')
+    user2.first_name = "Anis"
+    user2.last_name = "Two"
+    user2.save()
+    card2 = Card.objects.create(uid='A2B2C2D2', user=user2, is_active=True)
+    # No access rules linked
+    print(f"Created anis2 (UID: {card2.uid}) -> Rejected: No Access Rule")
+
+    # 6. User 3: anis3 (REJECTED: Date Exceeded)
+    user3 = User.objects.create_user(username='anis3', password='password')
+    user3.first_name = "Anis"
+    user3.last_name = "Three"
+    user3.save()
+    card3 = Card.objects.create(uid='A3B3C3D3', user=user3, is_active=True)
+    AccessRule.objects.create(
+        card=card3,
         device=device,
-        schedule=None,
+        schedule=sched_workdays_24h,
         start_date=datetime.date(2026, 6, 1),
-        end_date=datetime.date(2026, 6, 30),
-        defaults={'is_active': True}
+        end_date=datetime.date(2026, 6, 30), # Expired relative to July 2026
+        is_active=True
     )
-    if created_exp_rule:
-        print(f"  Created expired rule for '{expired_card.uid}' (Expired: June 30, 2026)")
+    print(f"Created anis3 (UID: {card3.uid}) -> Rejected: Date Exceeded (Expired in June)")
 
-    print("\nSeeding finished successfully.")
+    # 7. User 4: anis4 (REJECTED: Schedule Restricted - Scan at 04:59 early morning is outside 9-5)
+    user4 = User.objects.create_user(username='anis4', password='password')
+    user4.first_name = "Anis"
+    user4.last_name = "Four"
+    user4.save()
+    card4 = Card.objects.create(uid='A4B4C4D4', user=user4, is_active=True)
+    AccessRule.objects.create(
+        card=card4,
+        device=device,
+        schedule=sched_workdays_9_5,
+        start_date=datetime.date(2026, 7, 1),
+        end_date=datetime.date(2026, 7, 31),
+        is_active=True
+    )
+    print(f"Created anis4 (UID: {card4.uid}) -> Rejected: Schedule Restricted (Workdays 9-5 in July)")
+
+    print("\nDatabase seeding finished successfully.")
 
 if __name__ == '__main__':
     seed()
-

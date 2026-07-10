@@ -24,7 +24,7 @@ class AccessControlTests(TestCase):
         # Create a standard weekday schedule (Monday 9:00 - 17:00)
         self.mon_schedule = Schedule.objects.create(
             name="Monday 9 to 5",
-            day_of_week=1,  # Monday
+            monday=True,
             start_time=datetime.time(9, 0, 0),
             end_time=datetime.time(17, 0, 0)
         )

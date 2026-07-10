@@ -29,23 +29,28 @@ class Card(models.Model):
         return f"Card {self.uid} - {self.user.username}"
 
 class Schedule(models.Model):
-    DAYS_OF_WEEK = [
-        (1, 'Monday'),
-        (2, 'Tuesday'),
-        (3, 'Wednesday'),
-        (4, 'Thursday'),
-        (5, 'Friday'),
-        (6, 'Saturday'),
-        (7, 'Sunday'),
-    ]
-
     name = models.CharField(max_length=100)
-    day_of_week = models.IntegerField(choices=DAYS_OF_WEEK)
+    monday = models.BooleanField(default=False)
+    tuesday = models.BooleanField(default=False)
+    wednesday = models.BooleanField(default=False)
+    thursday = models.BooleanField(default=False)
+    friday = models.BooleanField(default=False)
+    saturday = models.BooleanField(default=False)
+    sunday = models.BooleanField(default=False)
     start_time = models.TimeField()
     end_time = models.TimeField()
 
     def __str__(self):
-        return f"{self.name} ({self.get_day_of_week_display()}: {self.start_time} - {self.end_time})"
+        days = []
+        if self.monday: days.append("Mon")
+        if self.tuesday: days.append("Tue")
+        if self.wednesday: days.append("Wed")
+        if self.thursday: days.append("Thu")
+        if self.friday: days.append("Fri")
+        if self.saturday: days.append("Sat")
+        if self.sunday: days.append("Sun")
+        days_str = ", ".join(days) or "No days"
+        return f"{self.name} ({days_str}: {self.start_time} - {self.end_time})"
 
 class AccessRule(models.Model):
     card = models.ForeignKey(Card, on_delete=models.CASCADE, null=True, blank=True, related_name='access_rules')

@@ -15,9 +15,9 @@ class CardAdmin(admin.ModelAdmin):
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('name', 'day_of_week', 'start_time', 'end_time')
-    list_filter = ('day_of_week',)
+    list_display = ('name', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'start_time', 'end_time')
     search_fields = ('name',)
+
 
 @admin.register(AccessRule)
 class AccessRuleAdmin(admin.ModelAdmin):

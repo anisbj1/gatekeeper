@@ -62,7 +62,17 @@ class AccessValidationService:
             # Check Schedule
             schedule_valid = True
             if rule.schedule:
-                if rule.schedule.day_of_week != current_day:
+                day_fields = {
+                    1: 'monday',
+                    2: 'tuesday',
+                    3: 'wednesday',
+                    4: 'thursday',
+                    5: 'friday',
+                    6: 'saturday',
+                    7: 'sunday'
+                }
+                day_field = day_fields.get(current_day)
+                if not getattr(rule.schedule, day_field, False):
                     schedule_valid = False
                 elif not (rule.schedule.start_time <= current_time <= rule.schedule.end_time):
                     schedule_valid = False
