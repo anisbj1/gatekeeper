@@ -27,9 +27,9 @@ def seed():
     User.objects.filter(username__in=['anis', 'anis1', 'anis2', 'anis3', 'anis4', 'visitor', 'expired_guest']).delete()
     
     # 2. Create device 'esp32_01'
-    device, created = Device.objects.get_or_create(
+    device, created = Device.objects.update_or_create(
         device_id='esp32_01',
-        defaults={'name': 'Main Lab Entrance', 'is_active': True}
+        defaults={'name': 'Main Lab Entrance', 'is_active': True, 'api_token': 'dev_secret_token_esp32_01'}
     )
     print(f"Registered Device: '{device.device_id}'")
         

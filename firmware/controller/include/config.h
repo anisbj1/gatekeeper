@@ -12,16 +12,17 @@
     #define WIFI_SSID     "Wokwi-GUEST"
     #define WIFI_PASS     ""
     // host.wokwi.internal resolves to your local PC within Wokwi VS Code extension
-    #define API_URL       "http://host.wokwi.internal:8000/api/v1/access/verify/"
+    #define BACKEND_URL   "https://host.wokwi.internal:8000/api/v1/access/verify/"
 #else
     // Physical Hardware Wi-Fi Settings (Edit these for your home/office network)
     #define WIFI_SSID     "YOUR_REAL_WIFI_SSID"
     #define WIFI_PASS     "YOUR_REAL_WIFI_PASSWORD"
     // Replace with your computer's local IP address (e.g. 192.168.1.15)
-    #define API_URL       "http://192.168.1.X:8000/api/v1/access/verify/"
+    #define BACKEND_URL   "https://192.168.1.X:8000/api/v1/access/verify/"
 #endif
 
 // IoT Device Configuration
-#define DEVICE_ID         "esp32_01"
+#define DEVICE_ID            "esp32_01"
+#define DEVICE_SECRET_TOKEN  "dev_secret_token_esp32_01"
 
 #endif // CONFIG_H

@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
+    'sslserver',
     
     # Local apps
     'apps.access_control.apps.AccessControlConfig',

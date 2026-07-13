@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <SPI.h>
 #include <MFRC522.h>
@@ -12,7 +13,7 @@
 // Networking configuration loaded from config.h
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PASS;
-const char* api_url = API_URL;
+const char* backend_url = BACKEND_URL;
 const char* device_id = DEVICE_ID;
 
 // Peripheral Drivers
@@ -61,9 +62,13 @@ void handleVerification(String cardUid) {
         return;
     }
 
+    WiFiClientSecure client;
+    client.setInsecure(); // Skip TLS certificate validation for prototype/sim testing
+
     HTTPClient http;
-    http.begin(api_url);
+    http.begin(client, backend_url);
     http.addHeader("Content-Type", "application/json");
+    http.addHeader("X-Device-Token", DEVICE_SECRET_TOKEN);
     
     StaticJsonDocument<200> reqDoc;
     reqDoc["card_uid"] = cardUid;

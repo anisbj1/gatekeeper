@@ -3,9 +3,9 @@ from .models import Device, Card, Schedule, AccessRule
 
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    list_display = ('device_id', 'name', 'is_active', 'created_at')
+    list_display = ('device_id', 'name', 'api_token', 'is_active', 'created_at')
     list_filter = ('is_active',)
-    search_fields = ('device_id', 'name')
+    search_fields = ('device_id', 'name', 'api_token')
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):

@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import AccessVerifySerializer
 from .services import AccessValidationService
+from .permissions import HasValidDeviceToken
 
 class AccessVerifyView(APIView):
+    permission_classes = [HasValidDeviceToken]
+
     def post(self, request, *args, **kwargs):
         serializer = AccessVerifySerializer(data=request.data)
         if serializer.is_valid():
