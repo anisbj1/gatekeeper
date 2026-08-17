@@ -1,0 +1,209 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block page_title %}Rules & Schedules{% endblock %}
+
+{% block content %}
+<div class="form-row" style="grid-template-columns: 1fr; gap: 2rem;">
+    <!-- Active Rules Pane -->
+    <div class="pane">
+        <div class="pane-header">
+            <h3 class="pane-title">Access Rules</h3>
+            <button class="btn btn-primary" id="btn-add-rule">➕ Add Access Rule</button>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Subject (User/Card)</th>
+                        <th>Target Door</th>
+                        <th>Schedule Window</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="rules-table-body">
+                    <tr>
+                        <td colspan="7" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading rules...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Schedules Pane -->
+    <div class="pane">
+        <div class="pane-header">
+            <h3 class="pane-title">Access Schedules</h3>
+            <button class="btn btn-primary" id="btn-add-schedule">➕ Add Schedule</button>
+        </div>
+        
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Schedule Name</th>
+                        <th>Active Days</th>
+                        <th>Time Window</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="schedules-table-body">
+                    <tr>
+                        <td colspan="4" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading schedules...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Access Rule Modal -->
+<div class="modal-overlay" id="rule-modal">
+    <div class="modal" style="max-width: 550px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="rule-modal-title">Add Access Rule</h3>
+            <button class="modal-close" onclick="closeRuleModal()">×</button>
+        </div>
+        <form id="rule-form">
+            <input type="hidden" id="rule-id">
+            
+            <div class="form-group">
+                <label>Subject Type *</label>
+                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                    <label class="form-checkbox">
+                        <input type="radio" name="subject_type" value="user" checked onclick="toggleSubjectSelects('user')">
+                        <span>Link to Employee</span>
+                    </label>
+                    <label class="form-checkbox">
+                        <input type="radio" name="subject_type" value="card" onclick="toggleSubjectSelects('card')">
+                        <span>Link to RFID Card</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Employee Select -->
+            <div class="form-group" id="rule-user-group">
+                <label for="rule-user-select">Employee *</label>
+                <select id="rule-user-select" class="form-control">
+                    <option value="">-- Choose Employee --</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }} ({{ u.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Card Select -->
+            <div class="form-group" id="rule-card-group" style="display: none;">
+                <label for="rule-card-select">RFID Card UID *</label>
+                <select id="rule-card-select" class="form-control">
+                    <option value="">-- Choose RFID Card --</option>
+                    {% for c in cards %}
+                    <option value="{{ c.id }}">{{ c.uid }} (${{ c.user.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Device Select -->
+            <div class="form-group">
+                <label for="rule-device-select">Target Door / Device *</label>
+                <select id="rule-device-select" class="form-control" required>
+                    <option value="">-- Choose Door --</option>
+                    {% for d in devices %}
+                    <option value="{{ d.id }}">{{ d.name }} ({{ d.device_id }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Schedule Select -->
+            <div class="form-group">
+                <label for="rule-schedule-select">Time Schedule (blank for 24/7 Access)</label>
+                <select id="rule-schedule-select" class="form-control">
+                    <option value="">24/7 Access (No constraints)</option>
+                    {% for s in schedules %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Date Window -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rule-start-date">Start Date</label>
+                    <input type="date" id="rule-start-date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="rule-end-date">End Date</label>
+                    <input type="date" id="rule-end-date" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-checkbox" style="margin-top: 0.5rem;">
+                    <input type="checkbox" id="rule-active" checked>
+                    <span>Rule Active (Enforced)</span>
+                </label>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Schedule Modal -->
+<div class="modal-overlay" id="schedule-modal">
+    <div class="modal" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="schedule-modal-title">Add Access Schedule</h3>
+            <button class="modal-close" onclick="closeScheduleModal()">×</button>
+        </div>
+        <form id="schedule-form">
+            <input type="hidden" id="schedule-id">
+            
+            <div class="form-group">
+                <label for="sched-name">Schedule Name *</label>
+                <input type="text" id="sched-name" class="form-control" placeholder="E.g. Regular Office Hours" required>
+            </div>
+
+            <div class="form-group">
+                <label>Allowed Days *</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.25rem;">
+                    <label class="form-checkbox"><input type="checkbox" id="sched-mon"><span>Monday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-tue"><span>Tuesday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-wed"><span>Wednesday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-thu"><span>Thursday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-fri"><span>Friday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-sat"><span>Saturday</span></label>
+                    <label class="form-checkbox"><input type="checkbox" id="sched-sun"><span>Sunday</span></label>
+                </div>
+            </div>
+
+            <div class="form-row" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label for="sched-start-time">Start Time *</label>
+                    <input type="time" id="sched-start-time" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="sched-end-time">End Time *</label>
+                    <input type="time" id="sched-end-time" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'frontend/js/rules.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block page_title %}Security Access Logs{% endblock %}
+
+{% block content %}
+<div class="pane">
+    <div class="pane-header">
+        <h3 class="pane-title">Access Attempts Audit Trail</h3>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <input type="text" id="search-logs" class="search-input" placeholder="Search by name, card or error...">
+        
+        <select id="filter-auth" class="filter-select">
+            <option value="">All Scans</option>
+            <option value="true">Granted Access Only</option>
+            <option value="false">Denied Access Only</option>
+        </select>
+        
+        <select id="filter-log-type" class="filter-select" style="min-width: 180px;">
+            <option value="access">RFID Card Scans</option>
+            <option value="biometric">Biometric Matches</option>
+        </select>
+        
+        <button class="btn btn-secondary" id="btn-filter">Search</button>
+    </div>
+
+    <!-- Data Tables -->
+    <div class="table-responsive" id="card-scans-table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User Details</th>
+                    <th>Card UID</th>
+                    <th>Device ID</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="access-logs-table-body">
+                <tr>
+                    <td colspan="5" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading scan logs...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive" id="biometric-attempts-table-wrapper" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Employee Username</th>
+                    <th>Card UID</th>
+                    <th>Device ID</th>
+                    <th>Confidence</th>
+                    <th>Match Status</th>
+                    <th>Processing Time</th>
+                    <th>Error Context</th>
+                </tr>
+            </thead>
+            <tbody id="biometric-logs-table-body">
+                <tr>
+                    <td colspan="8" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading biometric logs...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <span class="pagination-info" id="pagination-info">Showing 0 to 0 of 0 entries</span>
+        <div class="pagination-controls">
+            <button class="btn btn-secondary btn-sm" id="btn-prev" disabled>Previous</button>
+            <button class="btn btn-secondary btn-sm" id="btn-next" disabled>Next</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'frontend/js/logs.js' %}"></script>
+{% endblock %}

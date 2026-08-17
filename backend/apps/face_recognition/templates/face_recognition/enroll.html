@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biometric Enrollment Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --border-color: #334155;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary-color: #10b981; /* Emerald Green */
+            --primary-hover: #059669;
+            --error-color: #ef4444;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --error-bg: rgba(239, 68, 68, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        header h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        main {
+            width: 100%;
+            max-width: 960px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            main {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        select, input {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Camera & Capture Container */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background-color: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror view */
+        }
+
+        /* Face Outline Guide */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            height: 65%;
+            border: 2px dashed rgba(16, 185, 129, 0.5);
+            border-radius: 50% 50% 45% 45%;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .face-guide::before {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 2px;
+            background-color: rgba(16, 185, 129, 0.2);
+            top: 45%;
+        }
+
+        .slots-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .slot {
+            background-color: var(--surface-color);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .slot.active {
+            border-color: var(--primary-color);
+            background-color: rgba(16, 185, 129, 0.03);
+        }
+
+        .slot.completed {
+            border-style: solid;
+            border-color: var(--primary-color);
+        }
+
+        .slot img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slot-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .slot.completed .slot-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            color: var(--primary-color);
+            padding: 4px 0;
+        }
+
+        .status-banner {
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .status-banner.success {
+            display: block;
+            background-color: var(--success-bg);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .status-banner.error {
+            display: block;
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-instructions {
+            background-color: var(--surface-color);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .nav-links {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Biometric Enrollment Portal</h1>
+        <p>Register RFID cards and capture multi-view face biometrics seamlessly.</p>
+    </header>
+
+    <main>
+        <!-- Sidebar Controls -->
+        <section class="card">
+            <h2>User Registration</h2>
+            
+            <div class="form-group">
+                <label for="user-select">Select Employee</label>
+                <select id="user-select">
+                    <option value="">-- Choose User --</option>
+                    {% for u in users %}
+                    <option value="{{ u.username }}">{{ u.first_name }} {{ u.last_name }} ({{ u.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="card-uid">RFID Card UID (Hexadecimal)</label>
+                <input type="text" id="card-uid" placeholder="E.g. E9B3A2C8" maxlength="32">
+            </div>
+
+            <button id="btn-start">Start Enrollment</button>
+            
+            <div class="step-instructions" id="instruction-box">
+                Select an employee and enter an RFID card number to initialize the camera enrollment session.
+            </div>
+            
+            <div class="status-banner" id="status-message"></div>
+        </section>
+
+        <!-- Camera Workspace -->
+        <section class="workspace">
+            <div class="camera-container">
+                <video id="webcam" autoplay playsinline></video>
+                <div class="face-guide"></div>
+            </div>
+
+            <div class="slots-container">
+                <div class="slot" id="slot-0">
+                    <span class="slot-label">1. Front View</span>
+                </div>
+                <div class="slot" id="slot-1">
+                    <span class="slot-label">2. Left Profile</span>
+                </div>
+                <div class="slot" id="slot-2">
+                    <span class="slot-label">3. Right Profile</span>
+                </div>
+            </div>
+
+            <button id="btn-capture" disabled>Capture Frame</button>
+        </section>
+    </main>
+    
+    <div class="nav-links">
+        <a href="/admin/">← Go to Django Admin</a>
+        <a href="/admin/face_recognition/faceprofile/">View Profiles</a>
+        <a href="/admin/face_recognition/recognitionattempt/">View Recognition Logs</a>
+    </div>
+
+    <!-- Hidden canvas for image cropping/grabbing -->
+    <canvas id="capture-canvas" width="640" height="480" style="display: none;"></canvas>
+
+    <script>
+        // DOM Elements
+        const userSelect = document.getElementById('user-select');
+        const cardUidInput = document.getElementById('card-uid');
+        const btnStart = document.getElementById('btn-start');
+        const btnCapture = document.getElementById('btn-capture');
+        const webcam = document.getElementById('webcam');
+        const instructionBox = document.getElementById('instruction-box');
+        const statusMessage = document.getElementById('status-message');
+        const canvas = document.getElementById('capture-canvas');
+        
+        // State variables
+        let stream = null;
+        let sessionId = null;
+        let currentStep = 0; // 0: Front, 1: Left, 2: Right
+        const stepLabels = ["Front View", "Left Profile View", "Right Profile View"];
+        const stepInstructions = [
+            "Align your face inside the guide box, look directly at the camera, and keep a neutral expression.",
+            "Turn your head slightly to the left (profile view) and look towards the left border.",
+            "Turn your head slightly to the right (profile view) and look towards the right border."
+        ];
+
+        // Enable Webcam
+        async function startWebcam() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 640, height: 480, facingMode: 'user' } 
+                });
+                webcam.srcObject = stream;
+            } catch (err) {
+                console.error("Webcam error:", err);
+                showStatus("Webcam access denied. Please check permissions.", "error");
+            }
+        }
+
+        // Helper to show banners
+        function showStatus(text, type) {
+            statusMessage.textContent = text;
+            statusMessage.className = `status-banner ${type}`;
+        }
+
+        // Initialize webcam on load
+        window.addEventListener('DOMContentLoaded', startWebcam);
+
+        // Fetch CSRF Token from Cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Handle Start Enrollment
+        btnStart.addEventListener('click', async () => {
+            const username = userSelect.value;
+            const cardUid = cardUidInput.value.trim().toUpperCase();
+
+            if (!username || !cardUid) {
+                showStatus("Please select a user and enter a Card UID.", "error");
+                return;
+            }
+
+            showStatus("Initializing session...", "success");
+            btnStart.disabled = true;
+
+            const csrftoken = getCookie('csrftoken');
+
+            try {
+                const response = await fetch('/api/v1/face/web-enroll/start/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        card_uid: cardUid
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 201) {
+                    sessionId = data.session_id;
+                    currentStep = 0;
+                    
+                    // Reset UI slots
+                    for(let i=0; i<3; i++) {
+                        const slot = document.getElementById(`slot-${i}`);
+                        slot.className = "slot";
+                        slot.innerHTML = `<span class="slot-label">${i+1}. ${stepLabels[i]}</span>`;
+                    }
+                    
+                    document.getElementById('slot-0').className = "slot active";
+                    
+                    btnCapture.disabled = false;
+                    updateStepUI();
+                    showStatus(`Session active for ${data.username}.`, "success");
+                } else {
+                    showStatus(data.error || data.detail || "Failed to start session", "error");
+                    btnStart.disabled = false;
+                }
+            } catch (err) {
+                console.error("Start session error:", err);
+                showStatus("Network connection error.", "error");
+                btnStart.disabled = false;
+            }
+        });
+
+        // Update Instruction text based on current step
+        function updateStepUI() {
+            if (currentStep < 3) {
+                instructionBox.innerHTML = `<strong>Step ${currentStep + 1}: ${stepLabels[currentStep]}</strong><br>${stepInstructions[currentStep]}`;
+            } else {
+                instructionBox.innerHTML = `<strong>Enrollment Completed!</strong><br>The biometric profile has been successfully active. You can now select a new employee.`;
+                btnCapture.disabled = true;
+                btnStart.disabled = false;
+            }
+        }
+
+        // Handle Capture & Upload
+        btnCapture.addEventListener('click', () => {
+            if (!sessionId || currentStep >= 3) return;
+
+            // Draw current video frame to canvas
+            const ctx = canvas.getContext('2d');
+            // Mirror flip the canvas image horizontally to match what the user sees
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('session_id', sessionId);
+                formData.append('image', blob, 'frame.jpg');
+                formData.append('view_type', ['front', 'left', 'right'][currentStep]);
+
+                showStatus(`Uploading ${stepLabels[currentStep]}...`, "success");
+                btnCapture.disabled = true;
+
+                const csrftoken = getCookie('csrftoken');
+
+                try {
+                    const response = await fetch('/api/v1/face/web-enroll/upload/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 200 || response.status === 201) {
+                        // Mark slot as completed and show thumbnail
+                        const slot = document.getElementById(`slot-${currentStep}`);
+                        slot.className = "slot completed";
+                        
+                        const imgUrl = URL.createObjectURL(blob);
+                        slot.innerHTML = `<img src="${imgUrl}"><span class="slot-label">${stepLabels[currentStep]}</span>`;
+
+                        currentStep++;
+                        
+                        // Set next slot as active
+                        if (currentStep < 3) {
+                            document.getElementById(`slot-${currentStep}`).className = "slot active";
+                        }
+
+                        updateStepUI();
+                        if (response.status === 201) {
+                            showStatus("Biometric profile successfully registered!", "success");
+                        } else {
+                            showStatus("Frame accepted.", "success");
+                        }
+                    } else if (response.status === 422) {
+                        // Quality checks failed (e.g. blurry)
+                        showStatus(`Rejected: ${data.message}`, "error");
+                    } else {
+                        showStatus(data.error || "Upload failed", "error");
+                    }
+                } catch (err) {
+                    console.error("Upload error:", err);
+                    showStatus("Network upload failure.", "error");
+                } finally {
+                    if (currentStep < 3) {
+                        btnCapture.disabled = false;
+                    }
+                }
+            }, 'image/jpeg', 0.95);
+        });
+    </script>
+</body>
+</html>

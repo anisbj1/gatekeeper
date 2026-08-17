@@ -69,6 +69,135 @@ paths:
       responses:
         '201':
           description: Image stored successfully
+  /api/v1/face/enroll/start/:
+    post:
+      summary: Start enrollment session for user.
+      security:
+        - DeviceTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_uid:
+                  type: string
+                  example: "E9B3A2C8"
+                device_id:
+                  type: string
+                  example: "esp32_01"
+              required:
+                - card_uid
+                - device_id
+      responses:
+        '201':
+          description: Enrollment session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  status:
+                    type: string
+                  images_required:
+                    type: integer
+                  username:
+                    type: string
+        '403':
+          description: Inactive card/device
+        '404':
+          description: Card/Device not found
+  /api/v1/face/enroll/upload/:
+    post:
+      summary: Upload face frame during active enrollment session.
+      security:
+        - DeviceTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                session_id:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+                device_id:
+                  type: string
+              required:
+                - session_id
+                - image
+                - device_id
+      responses:
+        '200':
+          description: Image processed and accepted
+        '201':
+          description: Session completed
+        '422':
+          description: Quality checks failed
+  /api/v1/face/enroll/status/{session_id}/:
+    get:
+      summary: Check status of enrollment session.
+      security:
+        - DeviceTokenAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session status retrieved
+  /api/v1/face/verify/:
+    post:
+      summary: Verify scanned card user's face (1-to-1 matching).
+      security:
+        - DeviceTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                card_uid:
+                  type: string
+                device_id:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+              required:
+                - card_uid
+                - device_id
+                - image
+      responses:
+        '200':
+          description: Matched successfully
+        '403':
+          description: Biometric mismatch
+        '422':
+          description: Face processing/quality check failed
+  /api/v1/face/profile/{username}/:
+    get:
+      summary: Retrieve user biometric profile status.
+      responses:
+        '200':
+          description: Profile status retrieved
+        '404':
+          description: Profile not found
+    delete:
+      summary: Delete user biometric profile and images.
+      responses:
+        '200':
+          description: Profile deleted successfully
+
 
 components:
   securitySchemes:

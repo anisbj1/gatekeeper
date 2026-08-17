@@ -1,0 +1,66 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block page_title %}System Overview{% endblock %}
+
+{% block content %}
+<!-- Statistics Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-details">
+            <span class="stat-value" id="stats-employees">-</span>
+            <span class="stat-label">Employees</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💳</div>
+        <div class="stat-details">
+            <span class="stat-value" id="stats-cards">-</span>
+            <span class="stat-label">Active Cards</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📷</div>
+        <div class="stat-details">
+            <span class="stat-value" id="stats-biometrics">-</span>
+            <span class="stat-label">Face Profiles</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🔌</div>
+        <div class="stat-details">
+            <span class="stat-value" id="stats-devices">-</span>
+            <span class="stat-label">Registered Doors</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Split Pane -->
+<div class="form-row" style="grid-template-columns: 1fr 1fr; align-items: start; gap: 1.5rem;">
+    <!-- Recent General Activity -->
+    <div class="pane">
+        <div class="pane-header">
+            <h3 class="pane-title">Recent Card Scans</h3>
+            <span class="badge badge-success" id="activity-today-badge">Today: -</span>
+        </div>
+        <div class="activity-list" id="card-scans-list">
+            <div style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading scans...</div>
+        </div>
+    </div>
+
+    <!-- Recent Face Recognition Attempts -->
+    <div class="pane">
+        <div class="pane-header">
+            <h3 class="pane-title">Recent Biometric Verification</h3>
+        </div>
+        <div class="activity-list" id="biometric-attempts-list">
+            <div style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading attempts...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'frontend/js/dashboard.js' %}"></script>
+{% endblock %}

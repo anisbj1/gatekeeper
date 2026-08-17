@@ -1,0 +1,115 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block page_title %}Employee Management{% endblock %}
+
+{% block content %}
+<div class="pane">
+    <div class="pane-header">
+        <h3 class="pane-title">Registered Employees</h3>
+        <button class="btn btn-primary" id="btn-add-employee">➕ Add Employee</button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <input type="text" id="search-employees" class="search-input" placeholder="Search by name, username or email...">
+        <button class="btn btn-secondary" id="btn-search">Search</button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Privileges</th>
+                    <th>Biometrics</th>
+                    <th>Joined Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="employees-table-body">
+                <tr>
+                    <td colspan="8" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading employees...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <span class="pagination-info" id="pagination-info">Showing 0 to 0 of 0 entries</span>
+        <div class="pagination-controls">
+            <button class="btn btn-secondary btn-sm" id="btn-prev" disabled>Previous</button>
+            <button class="btn btn-secondary btn-sm" id="btn-next" disabled>Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Employee Modal -->
+<div class="modal-overlay" id="employee-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-title">Add Employee</h3>
+            <button class="modal-close" id="btn-close-modal">×</button>
+        </div>
+        <form id="employee-form">
+            <input type="hidden" id="employee-id">
+            
+            <div class="form-group">
+                <label for="emp-username">Username *</label>
+                <input type="text" id="emp-username" class="form-control" placeholder="johndoe" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="emp-first-name">First Name</label>
+                    <input type="text" id="emp-first-name" class="form-control" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label for="emp-last-name">Last Name</label>
+                    <input type="text" id="emp-last-name" class="form-control" placeholder="Doe">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="emp-email">Email Address</label>
+                <input type="email" id="emp-email" class="form-control" placeholder="john.doe@example.com">
+            </div>
+
+            <div class="form-group" id="password-group">
+                <label for="emp-password">Password *</label>
+                <input type="password" id="emp-password" class="form-control" placeholder="••••••••">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: none;" id="password-help">Leave blank to keep current password.</span>
+            </div>
+
+            <div class="form-row" style="margin-top: 1rem;">
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="emp-active" checked>
+                        <span>Active Employee</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="emp-staff">
+                        <span>Staff Privileges</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit-modal">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'frontend/js/employees.js' %}"></script>
+{% endblock %}

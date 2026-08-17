@@ -82,6 +82,29 @@ class AccessValidationService:
                 continue
 
             # Fully authorized rule found!
+            has_biometrics = False
+            try:
+                if hasattr(card.user, 'face_profile') and card.user.face_profile.is_biometric_active:
+                    has_biometrics = True
+            except Exception:
+                pass
+
+            if has_biometrics:
+                from apps.face_recognition.web_services import BiometricCameraVerificationService
+                # Trigger local webcam face recognition automatically
+                face_matched = BiometricCameraVerificationService.verify_face_from_webcam(
+                    user=card.user,
+                    device=device,
+                    card=card
+                )
+                if not face_matched:
+                    cls._log_attempt(card_uid, device_id, authorized=False, user_details=f"Face ID Failed ({card.user.username})")
+                    return {
+                        "authorized": False,
+                        "message": "Face ID Failed",
+                        "action": "keep_locked"
+                    }
+
             username = card.user.get_full_name() or card.user.username
             cls._log_attempt(card_uid, device_id, authorized=True, user_details=username)
             return {

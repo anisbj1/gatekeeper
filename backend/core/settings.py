@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     # Local apps
     'apps.access_control.apps.AccessControlConfig',
     'apps.security_logs.apps.SecurityLogsConfig',
+    'apps.face_recognition.apps.FaceRecognitionConfig',
+    'apps.frontend.apps.FrontendConfig',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +80,12 @@ USE_TZ = True
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Biometric parameters
+FACE_RECOGNITION_THRESHOLD = 0.65
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
@@ -85,4 +93,6 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }

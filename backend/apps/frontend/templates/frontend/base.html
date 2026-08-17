@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Access Control Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">🛡️</span>
+                <span class="brand-text">SmartAccess</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{% url 'frontend:dashboard' %}" class="nav-item" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{% url 'frontend:employees' %}" class="nav-item" id="nav-employees">
+                    <span class="nav-icon">👥</span> Employees
+                </a>
+                <a href="{% url 'frontend:cards' %}" class="nav-item" id="nav-cards">
+                    <span class="nav-icon">💳</span> RFID Cards
+                </a>
+                <a href="{% url 'frontend:devices' %}" class="nav-item" id="nav-devices">
+                    <span class="nav-icon">🚪</span> Doors & Devices
+                </a>
+                <a href="{% url 'frontend:rules' %}" class="nav-item" id="nav-rules">
+                    <span class="nav-icon">🔑</span> Rules & Schedules
+                </a>
+                <a href="{% url 'frontend:logs' %}" class="nav-item" id="nav-logs">
+                    <span class="nav-icon">📜</span> Access Logs
+                </a>
+                <a href="{% url 'frontend:enroll' %}" class="nav-item" id="nav-enroll">
+                    <span class="nav-icon">📷</span> Biometric Portal
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" id="btn-sidebar-logout">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <header class="app-header">
+                <div class="header-left">
+                    <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-badge">
+                        <span class="user-avatar">👤</span>
+                        <div class="user-info">
+                            <span class="user-name" id="header-user-fullname">Admin User</span>
+                            <span class="user-role" id="header-user-role">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Area -->
+            <main class="page-body">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Core APIs -->
+    <script src="{% static 'frontend/js/api.js' %}"></script>
+    <script>
+        // Set active nav link
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const navMap = {
+                'dashboard': 'nav-dashboard',
+                'employees': 'nav-employees',
+                'cards': 'nav-cards',
+                'devices': 'nav-devices',
+                'rules': 'nav-rules',
+                'logs': 'nav-logs',
+                'enroll': 'nav-enroll'
+            };
+            
+            for (const [key, id] of Object.entries(navMap)) {
+                if (currentPath.includes(key)) {
+                    document.getElementById(id)?.classList.add('active');
+                }
+            }
+
+            // Bind global logout button
+            document.getElementById('btn-sidebar-logout')?.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to log out?')) {
+                    try {
+                        const res = await API.post('/api/v1/auth/logout/');
+                        if (res) {
+                            window.location.href = "{% url 'frontend:login' %}";
+                        }
+                    } catch (e) {
+                        console.error('Logout error', e);
+                    }
+                }
+            });
+
+            // Populate header user details
+            API.get('/api/v1/auth/status/').then(user => {
+                if (user) {
+                    const fullname = `${user.first_name} ${user.last_name}`.trim() || user.username;
+                    document.getElementById('header-user-fullname').textContent = fullname;
+                    document.getElementById('header-user-role').textContent = user.is_superuser ? 'Super Administrator' : 'Staff Admin';
+                }
+            }).catch(err => {
+                // If unauthorized, redirect to login unless already on login page
+                if (!window.location.pathname.includes('login')) {
+                    window.location.href = "{% url 'frontend:login' %}";
+                }
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

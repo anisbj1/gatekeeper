@@ -1,0 +1,80 @@
+{% extends 'frontend/base.html' %}
+{% load static %}
+
+{% block page_title %}Doors & IoT Devices{% endblock %}
+
+{% block content %}
+<div class="pane">
+    <div class="pane-header">
+        <h3 class="pane-title">Registered ESP32 Controllers</h3>
+        <button class="btn btn-primary" id="btn-add-device">➕ Register Device</button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <input type="text" id="search-devices" class="search-input" placeholder="Search by Device ID or Name...">
+        <button class="btn btn-secondary" id="btn-search">Filter</button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Device ID</th>
+                    <th>Name / Location</th>
+                    <th>Security API Token</th>
+                    <th>Status</th>
+                    <th>Registered Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="devices-table-body">
+                <tr>
+                    <td colspan="6" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading devices...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Register Device Modal -->
+<div class="modal-overlay" id="device-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-title">Register ESP32 Device</h3>
+            <button class="modal-close" id="btn-close-modal">×</button>
+        </div>
+        <form id="device-form">
+            <input type="hidden" id="device-id">
+            
+            <div class="form-group">
+                <label for="dev-device-id">Device ID *</label>
+                <input type="text" id="dev-device-id" class="form-control" placeholder="E.g. esp32_controller_01" required>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Must contain only letters, numbers, underscores, or hyphens.</span>
+            </div>
+
+            <div class="form-group">
+                <label for="dev-name">Device Name / Door Location *</label>
+                <input type="text" id="dev-name" class="form-control" placeholder="E.g. Main Entrance Gate" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-checkbox" style="margin-top: 0.5rem;">
+                    <input type="checkbox" id="dev-active" checked>
+                    <span>Device Active (Enabled)</span>
+                </label>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'frontend/js/devices.js' %}"></script>
+{% endblock %}
