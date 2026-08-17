@@ -4,57 +4,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Access Control Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Smart Access Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}">
+    <script>
+        (function() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <span class="brand-icon">🛡️</span>
-                <span class="brand-text">SmartAccess</span>
+                <img src="{% static 'frontend/img/tt-logo.svg' %}" alt="Tunisie Telecom" class="brand-logo">
+                <div>
+                    <div class="brand-text">SmartAccess</div>
+                    <div class="brand-subtitle">Access Control</div>
+                </div>
             </div>
             <nav class="sidebar-nav">
                 <a href="{% url 'frontend:dashboard' %}" class="nav-item" id="nav-dashboard">
-                    <span class="nav-icon">📊</span> Dashboard
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
                 </a>
                 <a href="{% url 'frontend:employees' %}" class="nav-item" id="nav-employees">
-                    <span class="nav-icon">👥</span> Employees
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Employees
                 </a>
                 <a href="{% url 'frontend:cards' %}" class="nav-item" id="nav-cards">
-                    <span class="nav-icon">💳</span> RFID Cards
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    RFID Cards
                 </a>
                 <a href="{% url 'frontend:devices' %}" class="nav-item" id="nav-devices">
-                    <span class="nav-icon">🚪</span> Doors & Devices
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="12" y1="12" x2="8" y2="12"/></svg>
+                    Doors & Devices
                 </a>
                 <a href="{% url 'frontend:rules' %}" class="nav-item" id="nav-rules">
-                    <span class="nav-icon">🔑</span> Rules & Schedules
+                    <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Rules & Schedules
                 </a>
                 <a href="{% url 'frontend:logs' %}" class="nav-item" id="nav-logs">
-                    <span class="nav-icon">📜</span> Access Logs
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Access Logs
                 </a>
                 <a href="{% url 'frontend:enroll' %}" class="nav-item" id="nav-enroll">
-                    <span class="nav-icon">📷</span> Biometric Portal
+                    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Biometric Portal
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <button class="btn-logout" id="btn-sidebar-logout">🚪 Logout</button>
+                <button class="btn-logout" id="btn-sidebar-logout">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign Out
+                </button>
             </div>
         </aside>
 
-        <!-- Main Workspace -->
         <div class="main-content">
-            <!-- Top Header -->
             <header class="app-header">
                 <div class="header-left">
                     <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
                 </div>
                 <div class="header-right">
+                    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    </button>
                     <div class="user-badge">
-                        <span class="user-avatar">👤</span>
+                        <div class="user-avatar">
+                            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
                         <div class="user-info">
                             <span class="user-name" id="header-user-fullname">Admin User</span>
                             <span class="user-role" id="header-user-role">Administrator</span>
@@ -63,21 +85,18 @@
                 </div>
             </header>
 
-            <!-- Dynamic Content Area -->
             <main class="page-body">
                 {% block content %}{% endblock %}
             </main>
         </div>
     </div>
 
-    <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- Core APIs -->
     <script src="{% static 'frontend/js/api.js' %}"></script>
     <script>
-        // Set active nav link
         document.addEventListener('DOMContentLoaded', () => {
+            // Active nav
             const currentPath = window.location.pathname;
             const navMap = {
                 'dashboard': 'nav-dashboard',
@@ -88,16 +107,24 @@
                 'logs': 'nav-logs',
                 'enroll': 'nav-enroll'
             };
-            
             for (const [key, id] of Object.entries(navMap)) {
                 if (currentPath.includes(key)) {
                     document.getElementById(id)?.classList.add('active');
                 }
             }
 
-            // Bind global logout button
+            // Theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            themeToggle?.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+
+            // Logout
             document.getElementById('btn-sidebar-logout')?.addEventListener('click', async () => {
-                if (confirm('Are you sure you want to log out?')) {
+                if (confirm('Are you sure you want to sign out?')) {
                     try {
                         const res = await API.post('/api/v1/auth/logout/');
                         if (res) {
@@ -109,7 +136,7 @@
                 }
             });
 
-            // Populate header user details
+            // User info
             API.get('/api/v1/auth/status/').then(user => {
                 if (user) {
                     const fullname = `${user.first_name} ${user.last_name}`.trim() || user.username;
@@ -117,7 +144,6 @@
                     document.getElementById('header-user-role').textContent = user.is_superuser ? 'Super Administrator' : 'Staff Admin';
                 }
             }).catch(err => {
-                // If unauthorized, redirect to login unless already on login page
                 if (!window.location.pathname.includes('login')) {
                     window.location.href = "{% url 'frontend:login' %}";
                 }

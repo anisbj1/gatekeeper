@@ -1,16 +1,15 @@
 {% extends 'frontend/base.html' %}
 {% load static %}
 
-{% block page_title %}RFID Card Management{% endblock %}
+{% block page_title %}RFID Cards{% endblock %}
 
 {% block content %}
 <div class="pane">
     <div class="pane-header">
         <h3 class="pane-title">Registered RFID Badges</h3>
-        <button class="btn btn-primary" id="btn-add-card">➕ Register Card</button>
+        <button class="btn btn-primary" id="btn-add-card">Register Card</button>
     </div>
 
-    <!-- Filters Bar -->
     <div class="filters-bar">
         <input type="text" id="search-cards" class="search-input" placeholder="Search by UID or username...">
         <select id="filter-active" class="filter-select">
@@ -21,7 +20,6 @@
         <button class="btn btn-secondary" id="btn-search">Filter</button>
     </div>
 
-    <!-- Data Table -->
     <div class="table-responsive">
         <table>
             <thead>
@@ -29,8 +27,8 @@
                     <th>Card UID</th>
                     <th>Assigned Employee</th>
                     <th>Status</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
+                    <th>Created</th>
+                    <th>Updated</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -42,7 +40,6 @@
         </table>
     </div>
 
-    <!-- Pagination -->
     <div class="pagination">
         <span class="pagination-info" id="pagination-info">Showing 0 to 0 of 0 entries</span>
         <div class="pagination-controls">
@@ -52,12 +49,13 @@
     </div>
 </div>
 
-<!-- Register Card Modal -->
 <div class="modal-overlay" id="card-modal">
     <div class="modal">
         <div class="modal-header">
             <h3 class="modal-title" id="modal-title">Register RFID Card</h3>
-            <button class="modal-close" id="btn-close-modal">×</button>
+            <button class="modal-close" id="btn-close-modal">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
         <form id="card-form">
             <input type="hidden" id="card-id">
@@ -65,7 +63,7 @@
             <div class="form-group">
                 <label for="card-uid-input">Card UID *</label>
                 <input type="text" id="card-uid-input" class="form-control" placeholder="E.g. E9B3A2C8" maxlength="32" required>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">Must be a valid hexadecimal string of length 8 to 32 characters (4 to 16 bytes).</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Valid hexadecimal string, 8-32 characters.</span>
             </div>
 
             <div class="form-group">
@@ -73,7 +71,7 @@
                 <select id="card-user-select" class="form-control" required>
                     <option value="">-- Select Employee --</option>
                     {% for u in users %}
-                    <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }} (${{ u.username }})</option>
+                    <option value="{{ u.id }}">{{ u.first_name }} {{ u.last_name }} ({{ u.username }})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -81,7 +79,7 @@
             <div class="form-group">
                 <label class="form-checkbox" style="margin-top: 0.5rem;">
                     <input type="checkbox" id="card-active" checked>
-                    <span>Card Active (Enabled)</span>
+                    <span>Card Active</span>
                 </label>
             </div>
 

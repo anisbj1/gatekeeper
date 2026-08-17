@@ -4,38 +4,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Access Control Admin - Login</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Smart Access Control - Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}">
+    <script>
+        (function() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
 </head>
 <body class="login-wrapper">
     <div class="login-card">
         <div class="login-header">
-            <div class="login-logo">🛡️</div>
+            <div class="login-logo">
+                <img src="{% static 'frontend/img/tt-logo.svg' %}" alt="Tunisie Telecom">
+            </div>
             <h2 class="login-title">SmartAccess</h2>
-            <p class="login-subtitle">Administrative Portal Sign In</p>
+            <p class="login-subtitle">Access Control Management Portal</p>
         </div>
 
         <form id="form-login">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" class="form-control" placeholder="admin" required autofocus>
+                <input type="text" id="username" class="form-control" placeholder="Enter your username" required autofocus>
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem;">
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.7rem;">
                 Sign In
             </button>
         </form>
 
-        <div class="status-banner error" id="login-error" style="font-size: 0.85rem; text-align: center; margin-top: 0.5rem; padding: 0.6rem; display: none;"></div>
+        <div id="login-error" style="font-size: 0.8rem; text-align: center; margin-top: 0.5rem; padding: 0.6rem; display: none; color: var(--error-color);"></div>
     </div>
 
-    <!-- Core APIs -->
     <script src="{% static 'frontend/js/api.js' %}"></script>
     <script>
         document.getElementById('form-login').addEventListener('submit', async (e) => {

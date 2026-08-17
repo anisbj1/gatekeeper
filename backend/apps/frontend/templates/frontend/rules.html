@@ -4,69 +4,66 @@
 {% block page_title %}Rules & Schedules{% endblock %}
 
 {% block content %}
-<div class="form-row" style="grid-template-columns: 1fr; gap: 2rem;">
-    <!-- Active Rules Pane -->
-    <div class="pane">
-        <div class="pane-header">
-            <h3 class="pane-title">Access Rules</h3>
-            <button class="btn btn-primary" id="btn-add-rule">➕ Add Access Rule</button>
-        </div>
-        
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Subject (User/Card)</th>
-                        <th>Target Door</th>
-                        <th>Schedule Window</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="rules-table-body">
-                    <tr>
-                        <td colspan="7" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading rules...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+<div class="pane">
+    <div class="pane-header">
+        <h3 class="pane-title">Access Rules</h3>
+        <button class="btn btn-primary" id="btn-add-rule">Add Access Rule</button>
     </div>
-
-    <!-- Schedules Pane -->
-    <div class="pane">
-        <div class="pane-header">
-            <h3 class="pane-title">Access Schedules</h3>
-            <button class="btn btn-primary" id="btn-add-schedule">➕ Add Schedule</button>
-        </div>
-        
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Schedule Name</th>
-                        <th>Active Days</th>
-                        <th>Time Window</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="schedules-table-body">
-                    <tr>
-                        <td colspan="4" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading schedules...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Target Door</th>
+                    <th>Schedule</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="rules-table-body">
+                <tr>
+                    <td colspan="7" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading rules...</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Access Rule Modal -->
+<div class="pane">
+    <div class="pane-header">
+        <h3 class="pane-title">Access Schedules</h3>
+        <button class="btn btn-primary" id="btn-add-schedule">Add Schedule</button>
+    </div>
+    
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Schedule Name</th>
+                    <th>Active Days</th>
+                    <th>Time Window</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="schedules-table-body">
+                <tr>
+                    <td colspan="4" style="color: var(--text-muted); text-align: center; padding: 2rem;">Loading schedules...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <div class="modal-overlay" id="rule-modal">
     <div class="modal" style="max-width: 550px;">
         <div class="modal-header">
             <h3 class="modal-title" id="rule-modal-title">Add Access Rule</h3>
-            <button class="modal-close" onclick="closeRuleModal()">×</button>
+            <button class="modal-close" onclick="closeRuleModal()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
         <form id="rule-form">
             <input type="hidden" id="rule-id">
@@ -85,7 +82,6 @@
                 </div>
             </div>
 
-            <!-- Employee Select -->
             <div class="form-group" id="rule-user-group">
                 <label for="rule-user-select">Employee *</label>
                 <select id="rule-user-select" class="form-control">
@@ -96,18 +92,16 @@
                 </select>
             </div>
 
-            <!-- Card Select -->
             <div class="form-group" id="rule-card-group" style="display: none;">
                 <label for="rule-card-select">RFID Card UID *</label>
                 <select id="rule-card-select" class="form-control">
                     <option value="">-- Choose RFID Card --</option>
                     {% for c in cards %}
-                    <option value="{{ c.id }}">{{ c.uid }} (${{ c.user.username }})</option>
+                    <option value="{{ c.id }}">{{ c.uid }} ({{ c.user.username }})</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Device Select -->
             <div class="form-group">
                 <label for="rule-device-select">Target Door / Device *</label>
                 <select id="rule-device-select" class="form-control" required>
@@ -118,18 +112,16 @@
                 </select>
             </div>
 
-            <!-- Schedule Select -->
             <div class="form-group">
-                <label for="rule-schedule-select">Time Schedule (blank for 24/7 Access)</label>
+                <label for="rule-schedule-select">Time Schedule (blank for 24/7)</label>
                 <select id="rule-schedule-select" class="form-control">
-                    <option value="">24/7 Access (No constraints)</option>
+                    <option value="">24/7 Access</option>
                     {% for s in schedules %}
                     <option value="{{ s.id }}">{{ s.name }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Date Window -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="rule-start-date">Start Date</label>
@@ -144,7 +136,7 @@
             <div class="form-group">
                 <label class="form-checkbox" style="margin-top: 0.5rem;">
                     <input type="checkbox" id="rule-active" checked>
-                    <span>Rule Active (Enforced)</span>
+                    <span>Rule Active</span>
                 </label>
             </div>
 
@@ -156,12 +148,13 @@
     </div>
 </div>
 
-<!-- Schedule Modal -->
 <div class="modal-overlay" id="schedule-modal">
     <div class="modal" style="max-width: 500px;">
         <div class="modal-header">
             <h3 class="modal-title" id="schedule-modal-title">Add Access Schedule</h3>
-            <button class="modal-close" onclick="closeScheduleModal()">×</button>
+            <button class="modal-close" onclick="closeScheduleModal()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
         <form id="schedule-form">
             <input type="hidden" id="schedule-id">
@@ -184,7 +177,7 @@
                 </div>
             </div>
 
-            <div class="form-row" style="margin-top: 1rem;">
+            <div class="form-row" style="margin-top: 0.75rem;">
                 <div class="form-group">
                     <label for="sched-start-time">Start Time *</label>
                     <input type="time" id="sched-start-time" class="form-control" required>

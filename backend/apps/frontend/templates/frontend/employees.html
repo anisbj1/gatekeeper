@@ -1,22 +1,20 @@
 {% extends 'frontend/base.html' %}
 {% load static %}
 
-{% block page_title %}Employee Management{% endblock %}
+{% block page_title %}Employees{% endblock %}
 
 {% block content %}
 <div class="pane">
     <div class="pane-header">
         <h3 class="pane-title">Registered Employees</h3>
-        <button class="btn btn-primary" id="btn-add-employee">➕ Add Employee</button>
+        <button class="btn btn-primary" id="btn-add-employee">Add Employee</button>
     </div>
 
-    <!-- Filters Bar -->
     <div class="filters-bar">
         <input type="text" id="search-employees" class="search-input" placeholder="Search by name, username or email...">
         <button class="btn btn-secondary" id="btn-search">Search</button>
     </div>
 
-    <!-- Data Table -->
     <div class="table-responsive">
         <table>
             <thead>
@@ -27,7 +25,7 @@
                     <th>Status</th>
                     <th>Privileges</th>
                     <th>Biometrics</th>
-                    <th>Joined Date</th>
+                    <th>Joined</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -39,7 +37,6 @@
         </table>
     </div>
 
-    <!-- Pagination -->
     <div class="pagination">
         <span class="pagination-info" id="pagination-info">Showing 0 to 0 of 0 entries</span>
         <div class="pagination-controls">
@@ -49,12 +46,13 @@
     </div>
 </div>
 
-<!-- Add/Edit Employee Modal -->
 <div class="modal-overlay" id="employee-modal">
     <div class="modal">
         <div class="modal-header">
             <h3 class="modal-title" id="modal-title">Add Employee</h3>
-            <button class="modal-close" id="btn-close-modal">×</button>
+            <button class="modal-close" id="btn-close-modal">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
         <form id="employee-form">
             <input type="hidden" id="employee-id">
@@ -86,7 +84,7 @@
                 <span style="font-size: 0.75rem; color: var(--text-muted); display: none;" id="password-help">Leave blank to keep current password.</span>
             </div>
 
-            <div class="form-row" style="margin-top: 1rem;">
+            <div class="form-row" style="margin-top: 0.75rem;">
                 <div class="form-group">
                     <label class="form-checkbox">
                         <input type="checkbox" id="emp-active" checked>
