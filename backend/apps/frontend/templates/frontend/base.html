@@ -136,6 +136,11 @@
                 }
             });
 
+            // Initialize automatic inactivity timeout tracker (5 min = 300s)
+            if (window.IdleTimeoutManager) {
+                window.IdleTimeoutManager.init({ timeoutSeconds: 300 });
+            }
+
             // User info
             API.get('/api/v1/auth/status/').then(user => {
                 if (user) {
@@ -150,6 +155,7 @@
             });
         });
     </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

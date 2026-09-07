@@ -1,4 +1,4 @@
-from .models import AccessLog
+from .models import AccessLog, AdminAuditLog
 
 class AuditLoggingService:
     @classmethod
@@ -9,3 +9,16 @@ class AuditLoggingService:
             authorized=authorized,
             user_details=user_details
         )
+
+
+class AdminAuditService:
+    @classmethod
+    def log_event(cls, event_type: str, actor: str = None, target_user: str = None, ip_address: str = None, details: str = "") -> AdminAuditLog:
+        return AdminAuditLog.objects.create(
+            event_type=event_type,
+            actor=actor,
+            target_user=target_user,
+            ip_address=ip_address,
+            details=details
+        )
+

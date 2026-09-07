@@ -24,10 +24,11 @@ class AccessVerifySerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     face_enrolled = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'is_active', 'is_staff', 'is_superuser', 'face_enrolled', 'date_joined']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'is_active', 'is_staff', 'is_superuser', 'roles', 'face_enrolled', 'date_joined']
         read_only_fields = ['id', 'date_joined']
 
     def get_face_enrolled(self, obj):
@@ -35,6 +36,10 @@ class UserSerializer(serializers.ModelSerializer):
             return hasattr(obj, 'face_profile') and obj.face_profile.is_biometric_active
         except Exception:
             return False
+
+    def get_roles(self, obj):
+        return list(obj.groups.values_list('name', flat=True))
+
 
 
 class CardSerializer(serializers.ModelSerializer):

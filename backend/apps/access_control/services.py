@@ -130,3 +130,24 @@ class AccessValidationService:
             user_details=user_details
         )
 
+
+class UserSessionService:
+    @classmethod
+    def invalidate_user_sessions(cls, user_id: int):
+        """
+        Invalidates all active database sessions belonging to a specific user.
+        """
+        from django.contrib.sessions.models import Session
+        user_id_str = str(user_id)
+        sessions_to_delete = []
+        for s in Session.objects.all():
+            try:
+                decoded = s.get_decoded()
+                if str(decoded.get('_auth_user_id')) == user_id_str:
+                    sessions_to_delete.append(s.pk)
+            except Exception:
+                continue
+        if sessions_to_delete:
+            Session.objects.filter(pk__in=sessions_to_delete).delete()
+
+

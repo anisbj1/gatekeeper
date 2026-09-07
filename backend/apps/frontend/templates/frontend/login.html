@@ -45,6 +45,17 @@
 
     <script src="{% static 'frontend/js/api.js' %}"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorBanner = document.getElementById('login-error');
+            if (urlParams.get('reason') === 'inactivity') {
+                errorBanner.textContent = 'Your session timed out due to 5 minutes of inactivity. Please sign in again.';
+                errorBanner.style.color = 'var(--warning-color, #eab308)';
+                errorBanner.style.display = 'block';
+                showToast('Session expired due to inactivity.', 'warning');
+            }
+        });
+
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             const usernameInput = document.getElementById('username');
@@ -74,5 +85,6 @@
             }
         });
     </script>
+
 </body>
 </html>

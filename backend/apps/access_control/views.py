@@ -1,12 +1,15 @@
+import time
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models import Q
+
 from .models import Device, Card, Schedule, AccessRule
 from .serializers import (
     AccessVerifySerializer,
@@ -16,10 +19,28 @@ from .serializers import (
     ScheduleSerializer,
     AccessRuleSerializer
 )
-from .services import AccessValidationService
-from .permissions import HasValidDeviceToken
+from .services import AccessValidationService, UserSessionService
+from .permissions import (
+    HasValidDeviceToken,
+    IsSuperAdminUser,
+    IsOperationalAdminUser,
+    CanManageUsersPermission,
+    CanManageDevicesPermission
+)
 from apps.security_logs.models import AccessLog
+from apps.security_logs.services import AdminAuditService
 from apps.face_recognition.models import FaceProfile
+
+try:
+    from axes.handlers.proxy import AxesProxyHandler
+    from axes.utils import reset as axes_reset
+    from axes.models import AccessAttempt
+    is_axes_locked = AxesProxyHandler.is_locked
+except ImportError:
+    is_axes_locked = lambda req: False
+    axes_reset = lambda **kw: None
+    AccessAttempt = None
+
 
 class AccessVerifyView(APIView):
     permission_classes = [HasValidDeviceToken]
@@ -47,6 +68,13 @@ class AuthLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        # 1. Check if IP / client is currently locked out by Axes
+        if is_axes_locked(request):
+            return Response(
+                {"error": "Too many failed login attempts. Your IP address is temporarily blocked for security."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
         username = request.data.get('username')
         password = request.data.get('password')
         
@@ -56,20 +84,40 @@ class AuthLoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if not user.is_active:
-                return Response({"error": "User account is disabled"}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"error": "User account is disabled."}, status=status.HTTP_403_FORBIDDEN)
             if not user.is_staff:
-                return Response({"error": "Access restricted to staff members"}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"error": "Access restricted to staff members."}, status=status.HTTP_403_FORBIDDEN)
             
             login(request, user)
+            now_ts = time.time()
+            request.session['_session_created_at'] = now_ts
+            request.session['_session_last_activity'] = now_ts
+
             serializer = UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+            # Check if this failure just triggered an Axes lockout
+            if is_axes_locked(request):
+                return Response(
+                    {"error": "Too many failed login attempts. Your IP address has been temporarily blocked."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+
+            # Check if user exists and password is correct, but account is disabled
+            try:
+                existing_user = User.objects.get(username=username)
+                if existing_user.check_password(password) and not existing_user.is_active:
+                    return Response({"error": "User account is disabled."}, status=status.HTTP_403_FORBIDDEN)
+            except User.DoesNotExist:
+                pass
+
+            return Response({"error": "Invalid username or password."}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 class AuthLogoutView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
 
     def post(self, request, *args, **kwargs):
         logout(request)
@@ -78,7 +126,7 @@ class AuthLogoutView(APIView):
 
 class AuthStatusView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
 
     def get(self, request, *args, **kwargs):
         serializer = UserSerializer(request.user)
@@ -87,12 +135,11 @@ class AuthStatusView(APIView):
 
 class DashboardStatsView(APIView):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
 
     def get(self, request, *args, **kwargs):
         today = timezone.localtime(timezone.now()).date()
         
-        # Access log counts
         today_access_logs = AccessLog.objects.filter(timestamp__date=today)
         granted_today = today_access_logs.filter(authorized=True).count()
         denied_today = today_access_logs.filter(authorized=False).count()
@@ -111,7 +158,7 @@ class DashboardStatsView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [CanManageUsersPermission]
     queryset = User.objects.all().order_by('username')
     serializer_class = UserSerializer
 
@@ -125,12 +172,67 @@ class UserViewSet(viewsets.ModelViewSet):
                 Q(last_name__icontains=search) | 
                 Q(email__icontains=search)
             )
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
         return queryset
+
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdminUser])
+    def lock(self, request, pk=None):
+        """
+        Locks/disables an account and immediately invalidates all active sessions.
+        Restricted to Super Administrators.
+        """
+        user = self.get_object()
+        if user == request.user:
+            return Response({"error": "You cannot lock your own account."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user.is_active = False
+        user.save()
+
+        # Invalidate active database sessions immediately
+        UserSessionService.invalidate_user_sessions(user.id)
+
+        AdminAuditService.log_event(
+            event_type='ACCOUNT_LOCKED',
+            actor=request.user.username,
+            target_user=user.username,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            details=f"Account '{user.username}' locked by admin '{request.user.username}'."
+        )
+
+        return Response(
+            {"message": f"Account '{user.username}' locked successfully and active sessions invalidated."},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['post'], permission_classes=[IsSuperAdminUser])
+    def unlock(self, request, pk=None):
+        """
+        Unlocks/enables a disabled account.
+        Restricted to Super Administrators.
+        """
+        user = self.get_object()
+        user.is_active = True
+        user.save()
+
+        AdminAuditService.log_event(
+            event_type='ACCOUNT_UNLOCKED',
+            actor=request.user.username,
+            target_user=user.username,
+            ip_address=request.META.get('REMOTE_ADDR'),
+            details=f"Account '{user.username}' unlocked by admin '{request.user.username}'."
+        )
+
+        return Response(
+            {"message": f"Account '{user.username}' unlocked successfully."},
+            status=status.HTTP_200_OK
+        )
 
 
 class CardViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
     queryset = Card.objects.all().order_by('-created_at')
     serializer_class = CardSerializer
 
@@ -152,7 +254,7 @@ class CardViewSet(viewsets.ModelViewSet):
 
 class DeviceViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [CanManageDevicesPermission]
     queryset = Device.objects.all().order_by('device_id')
     serializer_class = DeviceSerializer
 
@@ -169,7 +271,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
 class ScheduleViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
     queryset = Schedule.objects.all().order_by('name')
     serializer_class = ScheduleSerializer
 
@@ -183,7 +285,7 @@ class ScheduleViewSet(viewsets.ModelViewSet):
 
 class AccessRuleViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsOperationalAdminUser]
     queryset = AccessRule.objects.all().order_by('-created_at')
     serializer_class = AccessRuleSerializer
 
@@ -196,4 +298,49 @@ class AccessRuleViewSet(viewsets.ModelViewSet):
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
         return queryset
+
+
+class SecurityManagementViewSet(viewsets.ViewSet):
+    """
+    SuperAdmin endpoint for monitoring and unblocking locked-out IP addresses.
+    """
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsSuperAdminUser]
+
+    @action(detail=False, methods=['get'])
+    def blocked_ips(self, request):
+        if AccessAttempt is None:
+            return Response([], status=status.HTTP_200_OK)
+            
+        attempts = AccessAttempt.objects.all().order_by('-attempt_time')
+        data = [
+            {
+                'ip_address': a.ip_address,
+                'username': a.username,
+                'failures_since_start': a.failures_since_start,
+                'attempt_time': a.attempt_time,
+            }
+            for a in attempts
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def unblock_ip(self, request):
+        ip_address = request.data.get('ip_address')
+        if not ip_address:
+            return Response({"error": "ip_address parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        axes_reset(ip=ip_address)
+        AdminAuditService.log_event(
+            event_type='IP_UNBLOCKED',
+            actor=request.user.username,
+            target_user=None,
+            ip_address=ip_address,
+            details=f"IP address '{ip_address}' manually unblocked by admin '{request.user.username}'."
+        )
+        return Response(
+            {"message": f"IP address '{ip_address}' unblocked successfully."},
+            status=status.HTTP_200_OK
+        )
+
 

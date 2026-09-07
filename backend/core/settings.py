@@ -19,12 +19,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'sslserver',
+    'axes',
     
     # Local apps
     'apps.access_control.apps.AccessControlConfig',
     'apps.security_logs.apps.SecurityLogsConfig',
     'apps.face_recognition.apps.FaceRecognitionConfig',
     'apps.frontend.apps.FrontendConfig',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -36,7 +42,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.access_control.middleware.SessionSecurityMiddleware',
+    'axes.middleware.AxesMiddleware',
 ]
+
 
 ROOT_URLCONF = 'core.urls'
 
@@ -96,3 +105,25 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+# ==========================================
+# Session Security Configuration
+# ==========================================
+SESSION_COOKIE_AGE = 86400  # 24 hours maximum for session cookie
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = False  # Controlled by SessionSecurityMiddleware
+
+# Custom session limits enforced by SessionSecurityMiddleware
+SESSION_IDLE_TIMEOUT_SECONDS = 300  # 5 minutes of inactivity
+SESSION_MAX_AGE_SECONDS = 86400     # 24 hours absolute maximum
+
+# ==========================================
+# Axes (Brute-Force & IP Lockout)
+# ==========================================
+AXES_FAILURE_LIMIT = 5              # Lockout after 5 failed attempts
+AXES_COOLOFF_TIME = 0.25            # 15 minutes (in hours)
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]
+AXES_RESET_ON_SUCCESS = True
+AXES_ENABLE_ACCESS_FAILURE_LOG = True
+AXES_VERBOSE = False
+

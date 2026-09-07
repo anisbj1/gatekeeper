@@ -10,7 +10,8 @@ from .views import (
     CardViewSet,
     DeviceViewSet,
     ScheduleViewSet,
-    AccessRuleViewSet
+    AccessRuleViewSet,
+    SecurityManagementViewSet
 )
 
 router = DefaultRouter()
@@ -19,6 +20,7 @@ router.register('cards', CardViewSet, basename='card')
 router.register('devices', DeviceViewSet, basename='device')
 router.register('schedules', ScheduleViewSet, basename='schedule')
 router.register('rules', AccessRuleViewSet, basename='rule')
+router.register('security', SecurityManagementViewSet, basename='security')
 
 urlpatterns = [
     path('access/verify/', AccessVerifyView.as_view(), name='access-verify'),
@@ -28,4 +30,5 @@ urlpatterns = [
     path('dashboard/stats/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('', include(router.urls)),
 ]
+
 

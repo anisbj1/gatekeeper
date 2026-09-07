@@ -122,6 +122,87 @@ const API = {
     }
 };
 
+// Automatic Inactivity Timeout Manager
+const IdleTimeoutManager = {
+    idleTimeoutMs: 5 * 60 * 1000,      // 5 minutes default
+    warningTimeoutMs: 4.5 * 60 * 1000, // 4 minutes 30 seconds default
+    warningTimer: null,
+    logoutTimer: null,
+    warningShown: false,
+
+    init(options = {}) {
+        // Only run on authenticated pages (not on login page)
+        if (window.location.pathname.includes('/login')) return;
+
+        if (options.timeoutSeconds) {
+            this.idleTimeoutMs = options.timeoutSeconds * 1000;
+            this.warningTimeoutMs = Math.max(10000, (options.timeoutSeconds - 30) * 1000);
+        }
+
+        const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+        let throttleTimer = null;
+
+        const activityHandler = () => {
+            if (!throttleTimer) {
+                throttleTimer = setTimeout(() => {
+                    this.resetTimer();
+                    throttleTimer = null;
+                }, 1000); // Throttle activity checks to once per second
+            }
+        };
+
+        events.forEach(evt => {
+            window.addEventListener(evt, activityHandler, { passive: true });
+        });
+
+        this.startTimer();
+    },
+
+    resetTimer() {
+        if (this.warningShown) {
+            this.hideWarning();
+        }
+        this.clearTimers();
+        this.startTimer();
+    },
+
+    startTimer() {
+        this.warningTimer = setTimeout(() => {
+            this.showWarning();
+        }, this.warningTimeoutMs);
+
+        this.logoutTimer = setTimeout(() => {
+            this.triggerLogout();
+        }, this.idleTimeoutMs);
+    },
+
+    clearTimers() {
+        if (this.warningTimer) clearTimeout(this.warningTimer);
+        if (this.logoutTimer) clearTimeout(this.logoutTimer);
+    },
+
+    showWarning() {
+        this.warningShown = true;
+        showToast('Inactivity notice: You will be automatically signed out in 30 seconds.', 'warning');
+    },
+
+    hideWarning() {
+        this.warningShown = false;
+    },
+
+    async triggerLogout() {
+        this.clearTimers();
+        try {
+            await API.post('/api/v1/auth/logout/');
+        } catch (e) {
+            // ignore network error on logout
+        }
+        window.location.href = '/login/?reason=inactivity';
+    }
+};
+
 // Export to window
 window.API = API;
 window.showToast = showToast;
+window.IdleTimeoutManager = IdleTimeoutManager;
+

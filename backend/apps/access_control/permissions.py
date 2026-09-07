@@ -61,3 +61,76 @@ class HasValidDeviceToken(permissions.BasePermission):
             raise PermissionDenied("Invalid device token.")
 
         return True
+
+
+class IsSuperAdminUser(permissions.BasePermission):
+    """
+    Permission checking that the requesting user is authenticated and is a Super Administrator (is_superuser=True).
+    """
+    message = "Action restricted to Super Administrators."
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_active and request.user.is_superuser)
+
+
+class IsOperationalAdminUser(permissions.BasePermission):
+    """
+    Permission checking that the requesting user is authenticated and is a staff member (is_staff=True).
+    """
+    message = "Action restricted to operational staff."
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.is_active and request.user.is_staff)
+
+
+class CanManageUsersPermission(permissions.BasePermission):
+    """
+    Operational staff can view users (GET).
+    Creating, updating, deleting, or locking/unlocking accounts requires explicit permission or SuperAdmin.
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and request.user.is_active and request.user.is_staff):
+            return False
+            
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        # Write actions: superuser or has model permissions
+        if request.user.is_superuser:
+            return True
+            
+        if request.method == 'POST':
+            return request.user.has_perm('auth.add_user')
+        if request.method in ['PUT', 'PATCH']:
+            return request.user.has_perm('auth.change_user')
+        if request.method == 'DELETE':
+            return request.user.has_perm('auth.delete_user')
+            
+        return False
+
+
+class CanManageDevicesPermission(permissions.BasePermission):
+    """
+    Operational staff can view devices (GET).
+    Modifying device hardware registrations or API tokens is restricted to SuperAdmin or specific permission.
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and request.user.is_active and request.user.is_staff):
+            return False
+            
+        if request.method in permissions.SAFE_METHODS:
+            return True
+            
+        return bool(request.user.is_superuser or request.user.has_perm('access_control.change_device'))
+
+
+class CanViewAdminAuditLogsPermission(permissions.BasePermission):
+    """
+    Admin audit logs are sensitive and only viewable by SuperAdmin or security auditor role.
+    """
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated and request.user.is_active and request.user.is_staff):
+            return False
+            
+        return bool(request.user.is_superuser or request.user.has_perm('security_logs.view_adminauditlog'))
+

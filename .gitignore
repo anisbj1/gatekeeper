@@ -10,7 +10,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-db.sqlite3
 
 # Logs
 *.log
@@ -24,3 +23,12 @@ db.sqlite3
 *.njsproj
 *.sln
 *.swp
+
+# Biometric images
+backend/media/biometrics/
+
+# Internship report
+rapport_stage.tex
+figures/
+screenshots/
+backend.rar
