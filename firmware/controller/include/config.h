@@ -23,6 +23,7 @@
 
 // IoT Device Configuration
 #define DEVICE_ID            "esp32_01"
+// Demo token only — generate a unique per-device secret before deployment
 #define DEVICE_SECRET_TOKEN  "dev_secret_token_esp32_01"
 
 #endif // CONFIG_H

@@ -11,6 +11,9 @@ __pycache__/
 *$py.class
 venv/
 
+# Database
+backend/db.sqlite3
+
 # Logs
 *.log
 .system_generated/
